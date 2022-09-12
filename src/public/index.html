@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <!-- Main Tag -->
+  <title>NewViteProject</title>
+  <meta id="PagKeywords" name="keywords" content="NewViteProject" />
+  <meta id="PagDescription" name="description" content="" />
+  <link id="LinkIcon" href="" type="image/x-icon" rel="shortcut icon" />
+  <link rel="icon" href="public/img/Pindias-square-logo.png" type="image/ico" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Facebook Tag -->
+  <meta property="og:url" content="https://testing.io/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Test context" />
+  <meta property="og:description" content="Test context" />
+  <meta property="og:image" content="http://ninodezign.com/fb.jpg" />
+  <meta property="og:site_name" content="NewViteProject" />
+
+  <!-- Font Awesome -->
+  <script src="https://kit.fontawesome.com/fa881189ef.js" crossorigin="anonymous"></script>
+
+  <!-- Css File -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.1/css/bootstrap.min.css" rel="stylesheet">
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/owl-carousel/1.3.3/owl.carousel.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/owl-carousel/1.3.3/owl.theme.min.css" rel="stylesheet">
+
+</head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"></div>
+
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.1/js/bootstrap.min.js"></script>
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/owl-carousel/1.3.3/owl.carousel.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+      $(".menuToggle, .backdrop, #mainmenu li:not(.parentMenu) > Link").click(function () {
+        $("body").toggleClass("menuOpen");
+      });
+      $('.overviewCarousel').owlCarousel({
+        margin: 20,
+        loop: false,
+        autoWidth: true,
+        items: 4
+      })
+    });
+  </script>
+</body>
+
+</html>

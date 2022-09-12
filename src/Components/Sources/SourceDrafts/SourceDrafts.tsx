@@ -1,0 +1,252 @@
+import { useEffect, useState } from 'react'
+import { Breadcrumb, Button, message, Table, Tooltip, Typography, Image, Dropdown, Space, Menu, Modal } from 'antd';
+import { DownOutlined, ExclamationCircleOutlined, PlusCircleOutlined } from "@ant-design/icons";
+import { Link, useNavigate } from 'react-router-dom';
+import { fetchChangeSourcesStatus, fetchGetSourcesByStatus } from '../../../service/Sources/sources';
+import { t } from 'i18next';
+import { ProTable } from '@ant-design/pro-components';
+
+const { Title } = Typography;
+const { confirm } = Modal;
+
+function SourceDrafts() {
+    const navigate = useNavigate();
+    const [tableLoading, settableLoading] = useState(false);
+    const [tableData, settableData] = useState([]);
+
+    // For pagination
+    const [currentPage, setcurrentPage] = useState<any>(1);
+    const [pageSize, setpageSize] = useState<any>(10);
+    const [totalSourceDrafts, settotalSourceDrafts] = useState(0);
+
+    // For row selecting
+    const [keyStoreArray, setkeyStoreArray] = useState<any>([]);
+    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
+    // For dropdown menu
+    const [dropdownLoading, setdropdownLoading] = useState(false);
+
+    useEffect(() => {
+        getRealEstateDraftList()
+    }, [currentPage, pageSize]);
+
+    // For row selecting
+    useEffect(() => {
+        const newArray: any = [];
+        keyStoreArray.forEach((array: any) => {
+            // add every element of array to newArray
+            if (array && array.length > 0) {
+                array.forEach((element: any) => {
+                    newArray.push(element);
+                });
+            }
+        });
+        setSelectedRowKeys(newArray);
+    }, [keyStoreArray]);
+
+    const getRealEstateDraftList = async () => {
+        settableLoading(true);
+        const filters = { page: currentPage - 1, size: pageSize }
+        const response = await fetchGetSourcesByStatus(filters, "DRAFT", settableLoading)
+        if (response) {
+            if (response.status === 200) {
+                const contents = response.data.content
+                settotalSourceDrafts(response.data.totalElements);
+                if (contents.length > 0) {
+                    const data = contents.map((content: any) => {
+                        return { ...content, key: content.id }
+                    })
+                    settableData(data);
+                } else {
+                    settableData([]);
+                }
+            } else {
+                message.error(response.data)
+            }
+        } else {
+            message.error(t("Get draft list failed"))
+        }
+    }
+
+    // For dropdowns
+    const onSelectChange = (newSelectedRowKeys: React.Key[], e: any, name: any) => {
+        if (name.type === "none") {
+            setkeyStoreArray([]);
+        } else {
+            const newArray = [...keyStoreArray];
+            newArray[currentPage - 1] = newSelectedRowKeys;
+            setkeyStoreArray(newArray);
+        }
+    };
+
+    const rowSelection: any = {
+        selectedRowKeys,
+        onChange: onSelectChange,
+        selections: [
+            Table.SELECTION_NONE,
+        ],
+    };
+
+    const hasSelected = selectedRowKeys.length > 0;
+
+    const handleDropdownActions = async (fetchModifySources: any, status: string, action: any = null) => {
+        setdropdownLoading(true);
+        const response = await fetchModifySources(selectedRowKeys, status, setdropdownLoading);
+        if (response) {
+            if (response.status === 200) {
+                message.success(`${action} ${t("successfully")}`);
+                setkeyStoreArray([]);
+                getRealEstateDraftList();
+            } else {
+                message.error(response.data);
+            }
+        } else {
+            message.error(`${action} ${t("failed")}`);
+        }
+    };
+
+    const showPromiseConfirm = () => {
+        confirm({
+            title: t("multiple-drafts-delete-confirm"),
+            icon: <ExclamationCircleOutlined />,
+            okText: t("yes"),
+            okType: "danger",
+            cancelText: t("no"),
+            onOk() {
+                handleDropdownActions(fetchChangeSourcesStatus, "DELETED", t("deleted"));
+            },
+        });
+    };
+
+    const menu = (
+        <Menu
+            items={[
+                {
+                    label: <span onClick={showPromiseConfirm}>{t("Delete draft")}</span>,
+                    key: "delete",
+                },
+            ]}
+        />
+    );
+
+    // For table
+    const columns: any = [
+        {
+            title: "ID",
+            dataIndex: "id",
+            width: "7%",
+            render: (id: string) => {
+                return (
+                    <Tooltip placement="topLeft" title={t("view-source-details")}>
+                        <Link to={`/sources/details/${id}`}>{id}</Link>
+                    </Tooltip>
+                );
+            },
+        },
+        {
+            title: t("name"),
+            dataIndex: "name",
+            width: "20%",
+            ellipsis: true,
+            render: (name: any, row: any) => {
+                return (
+                    <Tooltip placement="topLeft" title={name}>
+                        <Link to={`/sources/details/${row.id}`}>{name}</Link>
+                    </Tooltip>
+                );
+            },
+        },
+        {
+            title: t("domain"),
+            dataIndex: "linkHomepage",
+            width: "25%",
+            ellipsis: true,
+            render: (domain: string) => {
+                return (
+                    <Tooltip placement="topLeft" title={`${t("go-to")} ${domain}`}>
+                        <a href={domain} target="_blank">{domain}</a>
+                    </Tooltip>
+                )
+            },
+        },
+        {
+            title: t("path"),
+            dataIndex: "path",
+            width: "25%",
+            ellipsis: true,
+        },
+        {
+            title: t("category"),
+            dataIndex: "categoryName",
+            width: "23%",
+            ellipsis: true,
+        },
+    ];
+
+    const handleTableChange = (pagination: any, filters: any, sorter: any, extra: any) => {
+        const { current, pageSize } = pagination;
+        setcurrentPage(current);
+        setpageSize(pageSize);
+    };
+
+    return (
+        <div id='source-draft-list'>
+            <div className="d-flex justify-content-between align-items-center" style={{ margin: '16px 0' }}>
+                <Title level={4}>{t("drafts")}</Title>
+                <Breadcrumb>
+                    <Breadcrumb.Item>{t("sources")}</Breadcrumb.Item>
+                    <Breadcrumb.Item>{t("drafts")}</Breadcrumb.Item>
+                </Breadcrumb>
+            </div>
+            <div
+                className="site-layout-background"
+                style={{
+                    padding: 24,
+                    minHeight: 360
+                }}
+            >
+                <div className='d-flex align-items-center justify-content-between' style={{ marginBottom: 16 }}>
+                    <span>
+                        <Dropdown overlay={menu} trigger={["click"]} disabled={!hasSelected} placement="bottom">
+                            <Button type="primary" disabled={!hasSelected} loading={dropdownLoading}>
+                                <Space>
+                                    {t("action")}
+                                    <DownOutlined />
+                                </Space>
+                            </Button>
+                        </Dropdown>
+                        <span style={{ marginLeft: 8 }}>
+                            {hasSelected ? `${t("Selected")} ${selectedRowKeys.length > 1 ? `${selectedRowKeys.length} ${t("items")}` : `${selectedRowKeys.length} ${t("item")}`}` : ""}
+                        </span>
+                    </span>
+                    <span>
+                        <Button className='me-2' type='primary' onClick={() => navigate('/sources/create')}>
+                            <div className='d-flex align-items-center justify-content-between'>
+                                <PlusCircleOutlined className="me-2" />
+                                {t("source-create-new")}
+                            </div>
+                        </Button>
+                    </span>
+                </div>
+                <ProTable<any>
+                    rowSelection={rowSelection}
+                    columns={columns}
+                    dataSource={tableData}
+                    loading={tableLoading}
+                    onChange={handleTableChange}
+                    scroll={{ x: 822 }}
+                    pagination={{
+                        current: currentPage,
+                        defaultPageSize: 10,
+                        pageSize: pageSize,
+                        total: totalSourceDrafts,
+                        showSizeChanger: true,
+                        pageSizeOptions: ['10', '20', '50', '100']
+                    }}
+                />
+            </div>
+        </div>
+    )
+}
+
+export default SourceDrafts
